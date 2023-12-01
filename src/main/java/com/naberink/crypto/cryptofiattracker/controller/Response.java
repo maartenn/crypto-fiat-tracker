@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.naberink.crypto.cryptofiattracker.dto.DailyData;
 import com.naberink.crypto.cryptofiattracker.dto.MappedTransaction;
-import com.naberink.crypto.cryptofiattracker.dto.YearOverYearData;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

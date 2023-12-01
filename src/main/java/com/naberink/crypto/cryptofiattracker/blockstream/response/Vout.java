@@ -1,7 +1,5 @@
 package com.naberink.crypto.cryptofiattracker.blockstream.response;
 
-import java.util.List;
-
 import lombok.Data;
 
 @Data

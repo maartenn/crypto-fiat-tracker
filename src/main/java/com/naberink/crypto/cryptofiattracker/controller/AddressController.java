@@ -4,26 +4,27 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
-import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 
-import com.naberink.crypto.cryptofiattracker.dto.YearOverYearData;
-import com.naberink.crypto.cryptofiattracker.mapping.TransactionMapper;
-import com.naberink.crypto.cryptofiattracker.Util;
-import com.naberink.crypto.cryptofiattracker.dto.DailyData;
-import com.naberink.crypto.cryptofiattracker.dto.MappedTransaction;
-import com.naberink.crypto.cryptofiattracker.service.PricesService;
-import com.naberink.crypto.cryptofiattracker.blockstream.BlockStreamApi;
-import com.naberink.crypto.cryptofiattracker.blockstream.response.Transaction;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.naberink.crypto.cryptofiattracker.Util;
+import com.naberink.crypto.cryptofiattracker.blockstream.BlockStreamApi;
+import com.naberink.crypto.cryptofiattracker.blockstream.response.Transaction;
+import com.naberink.crypto.cryptofiattracker.dto.DailyData;
+import com.naberink.crypto.cryptofiattracker.dto.MappedTransaction;
+import com.naberink.crypto.cryptofiattracker.dto.YearOverYearData;
+import com.naberink.crypto.cryptofiattracker.mapping.TransactionMapper;
+import com.naberink.crypto.cryptofiattracker.service.PricesService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @Slf4j
@@ -72,7 +73,8 @@ public class AddressController {
     private List<DailyData> calculateDailyDataList(List<MappedTransaction> mappedTransactions,
             NavigableMap<Long, BigDecimal> priceMap) {
         List<DailyData> dailyDataList = new ArrayList<>();
-        List<YearOverYearData> yearOverYearData = new ArrayList<>();
+        // TODO use yoy
+        //List<YearOverYearData> yearOverYearData = new ArrayList<>();
         if (mappedTransactions.isEmpty()) {
             return dailyDataList; // Return an empty list if there are no transactions
         }

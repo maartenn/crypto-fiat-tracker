@@ -1,6 +1,5 @@
 package com.naberink.crypto.cryptofiattracker.blockstream.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data

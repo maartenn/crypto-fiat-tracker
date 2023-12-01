@@ -1,7 +1,6 @@
 package com.naberink.crypto.cryptofiattracker.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 
 @AllArgsConstructor

@@ -1,0 +1,9 @@
+
+spring.thymeleaf.cache: false
+resilience4j.retry:
+  instances:
+    unstableService:
+      maxAttempts: 5
+      waitDuration: 100
+      enableExponentialBackoff: true
+      exponentialBackoffMultiplier: 2

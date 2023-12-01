@@ -1,0 +1,11 @@
+1. add more beautiful ui
+2. decide whether to use thymleaf or just use normal rest controller?
+3. add logging
+4. make currency adjustable
+5. clean dto response objects to only return whats needed
+X 6. add error handling javascript
+7. add more resiliency java
+8. add about page
+9. add disclaimer
+10. add readme
+11. address validation

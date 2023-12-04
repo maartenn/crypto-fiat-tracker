@@ -7,7 +7,9 @@ The Crypto-Fiat Tracker is a Java-based application that allows users to track t
 
 ### Prerequisites
 - Java Development Kit (JDK) 21 or higher
-
+OR 
+- Docker ( it will compile and run with built-in Java )
+ 
 ### Steps to Run
 1. Clone the repository to your local machine.
 2. Navigate to the project directory.
@@ -30,7 +32,7 @@ Replace `YOUR_DESIRED_PORT` with the port number you wish to use.
 #### Docker
 To run a docker image that will be cleared after running call: 
 
-`docker run --rm -it $(docker build -q .)`
+`docker run --rm -it -p 8080:8080 $(docker build -q .)`
 
 ## Project Functionality
 - Allows users to input a Bitcoin address and view associated transactions. The transactions are enriched with the value at moment of buying and the current value. 

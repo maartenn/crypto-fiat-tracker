@@ -12,7 +12,7 @@
 #
 #ENTRYPOINT ["java", "-jar", "app.jar"]
 
-# not best practice to run jdk but otherwise I get many timeouts during deployment ...
+# not best practice to run jdk but otherwise I get many timeouts during deployment, probably because it has to retrieve JDK and JRE ...
 
 FROM eclipse-temurin:21-jdk-alpine AS build
 COPY . .

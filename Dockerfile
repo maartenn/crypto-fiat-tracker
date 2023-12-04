@@ -4,7 +4,7 @@ COPY . .
 
 RUN ./gradlew bootJar --no-daemon
 
-FROM eclipse-temurin:21.0.1_12-jdk-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 EXPOSE 8080
 

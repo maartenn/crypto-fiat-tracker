@@ -1,6 +1,7 @@
 package com.naberink.crypto.cryptofiattracker.controller;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 import com.naberink.crypto.cryptofiattracker.dto.DailyData;
@@ -18,4 +19,6 @@ public class Response {
     BigDecimal totalEurValueNow;
     Long sats;
     BigDecimal percentProfit;
+    BigDecimal lastKnownPrice;
+    Instant dateOfLastKnownPrice;
 }

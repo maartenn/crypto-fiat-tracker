@@ -43,7 +43,7 @@ public class TransactionMapper {
             eurValueInvested = eurValueInvested.add(fiatPriceAtBlockTime);
 
             Instant timestamp = Instant.ofEpochSecond(blockTimeEpochSeconds);
-            BigDecimal totalAmountEurValueNow = Util.calculateFiatPrice(satsBalance, bitcoinPriceAtBlocktime);
+            BigDecimal totalAmountEurValueNow = Util.calculateFiatPrice(satsBalance, latestPrice);
             BigDecimal txAmountEurNow = Util.calculateFiatPrice(amountSats, latestPrice);
 
             mappedTransactions.add(new MappedTransaction(transaction.getTxid(), amountSats, fiatPriceAtBlockTime,

@@ -51,17 +51,18 @@
         <canvas id="myChart"></canvas>
         <table id="example" class="display table table-striped" style="width:100%">
             <thead>
-            <tr>
-                <th>Transaction Id</th>
-                <th>Timestamp</th>
-                <th>Amount in sats</th>
-                <th>Value in eur at time</th>
-                <th>Value eur now</th>
-            </tr>
+                <tr>
+                    <th>Transaction Id</th>
+                    <th>Timestamp</th>
+                    <th>Amount in sats</th>
+                    <th>Value in eur at time</th>
+                    <th>Value eur now</th>
+                </tr>
             </thead>
             <tbody>
             </tbody>
         </table>
+        <span id="lastKnownPrice"></span>
     </div>
 </div>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
@@ -233,6 +234,7 @@
                             $('#profit').text(Math.ceil(this.Counter) + "%");
                         }
                     });
+                    $("#lastKnownPrice").text("Last known price: € " + data.lastKnownPrice + " from: " + new Date(data.dateOfLastKnownPrice*1000));
                     // enable button again
                     $("#addressBtn").html('Show graph');
                 });

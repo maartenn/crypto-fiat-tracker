@@ -57,8 +57,10 @@ public class AddressController {
         BigDecimal percentProfit = profit.divide(last.getTotalAmountEurAtMomentOfDepositing(), 2, RoundingMode.HALF_UP)
                 .multiply(new BigDecimal(100)).setScale(0, RoundingMode.HALF_UP);
 
+
+
         return new Response(dailyDataList, mappedTransactions, last.getTotalAmountEurAtMomentOfDepositing(),
-                last.getTotalAmountEurValueNow(), last.getTotalSatsBalance(), percentProfit);
+                last.getTotalAmountEurValueNow(), last.getTotalSatsBalance(), percentProfit, priceMap.lastEntry().getValue().setScale(2, RoundingMode.HALF_UP), Instant.ofEpochMilli(priceMap.lastEntry().getKey()));
     }
 
     private List<Transaction> getTransactions(String address) {

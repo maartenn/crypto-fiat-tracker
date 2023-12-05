@@ -4,12 +4,17 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.time.ZoneId;
 
+
+import com.naberink.crypto.cryptofiattracker.dto.DailyDatasAndYoYs;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,7 +55,7 @@ public class AddressController {
         }
 
         var mappedTransactions = TransactionMapper.mapTransactions(transactions, address, priceMap);
-        var dailyDataList = calculateDailyDataList(mappedTransactions, priceMap);
+        var dailyDatasAndYoYs = calculateDailyDataListAndYoY(mappedTransactions, priceMap);
 
         MappedTransaction last = mappedTransactions.getLast();
         BigDecimal profit = last.getTotalAmountEurValueNow().subtract(last.getTotalAmountEurAtMomentOfDepositing());
@@ -59,7 +64,7 @@ public class AddressController {
 
 
 
-        return new Response(dailyDataList, mappedTransactions, last.getTotalAmountEurAtMomentOfDepositing(),
+        return new Response(dailyDatasAndYoYs.getDailyDataList(), mappedTransactions, dailyDatasAndYoYs.getYearOverYearDataList(), last.getTotalAmountEurAtMomentOfDepositing(),
                 last.getTotalAmountEurValueNow(), last.getTotalSatsBalance(), percentProfit, priceMap.lastEntry().getValue().setScale(2, RoundingMode.HALF_UP), Instant.ofEpochMilli(priceMap.lastEntry().getKey()));
     }
 
@@ -72,13 +77,13 @@ public class AddressController {
         }
     }
 
-    private List<DailyData> calculateDailyDataList(List<MappedTransaction> mappedTransactions,
-            NavigableMap<Long, BigDecimal> priceMap) {
+    private DailyDatasAndYoYs calculateDailyDataListAndYoY(List<MappedTransaction> mappedTransactions,
+                                                           NavigableMap<Long, BigDecimal> priceMap) {
         List<DailyData> dailyDataList = new ArrayList<>();
-        // TODO use yoy
-        //List<YearOverYearData> yearOverYearData = new ArrayList<>();
+
+        List<YearOverYearData> yearOverYearDataList = new ArrayList<>();
         if (mappedTransactions.isEmpty()) {
-            return dailyDataList; // Return an empty list if there are no transactions
+            return new DailyDatasAndYoYs(dailyDataList, null); // Return an empty list if there are no transactions
         }
 
         long firstTransactionTime = mappedTransactions.get(0).getTimestamp().truncatedTo(ChronoUnit.DAYS)
@@ -91,6 +96,7 @@ public class AddressController {
             Instant day = Instant.ofEpochMilli(entry.getKey());
             BigDecimal price = entry.getValue();
 
+
             for (MappedTransaction transaction : mappedTransactions) {
                 // Include transaction only if it occurred on the same day
                 if (transaction.getTimestamp().truncatedTo(ChronoUnit.DAYS).equals(day.truncatedTo(ChronoUnit.DAYS))) {
@@ -98,8 +104,7 @@ public class AddressController {
                     totalEurDeposited = totalEurDeposited.add(transaction.getTxAmountEur());
                 }
             }
-            // if day is jan 1 then create YearOverYearData filling all fields in
-            // constructor and add to the list
+            
 
             BigDecimal totalEurValueNow = new BigDecimal(totalSats)
                     .multiply(price)
@@ -112,10 +117,33 @@ public class AddressController {
             dailyData.setTotalAmountEurValueNow(totalEurValueNow);
             dailyData.setTotalAmountEurAtMomentOfDepositing(totalEurDeposited);
 
+
             dailyDataList.add(dailyData);
+
+
+            LocalDate localDate = day.atZone(ZoneId.systemDefault()).toLocalDate();
+            // only execute IF 31 december XOR last entry, because if it's 31 dec there might be 2 entries, so we only hop into the if it's 31 december AND NOT last entry.
+            if (localDate.getMonth() == Month.DECEMBER &&
+                    localDate.getDayOfMonth() == 31 | entry.equals(relevantPrices.lastEntry())) {
+                        BigDecimal percentProfitComparedToPreviousYear;
+                        BigDecimal depositsThisYear;
+                        if(yearOverYearDataList.size() > 0) {
+                            depositsThisYear = totalEurDeposited.subtract(yearOverYearDataList.getLast().getTotalAmountEurAtMomentOfDepositing());
+                            YearOverYearData yearOverYearDataPreviousYear = yearOverYearDataList.getLast();
+                            BigDecimal profitComparedToPreviousYear = totalEurValueNow.subtract(yearOverYearDataPreviousYear.getTotalAmountEurValueNow()).subtract(depositsThisYear);
+
+                            percentProfitComparedToPreviousYear = profitComparedToPreviousYear.divide(yearOverYearDataPreviousYear.getTotalAmountEurValueNow(), 2, RoundingMode.HALF_UP)
+                                .multiply(new BigDecimal(100)).setScale(0, RoundingMode.HALF_UP);
+                        } else {
+                            percentProfitComparedToPreviousYear = BigDecimal.ZERO;
+                            depositsThisYear = totalEurDeposited;
+                        }
+                YearOverYearData yearOverYearData = new YearOverYearData(localDate.getYear(), totalSats, totalEurValueNow, totalEurDeposited, percentProfitComparedToPreviousYear, depositsThisYear);
+                yearOverYearDataList.add(yearOverYearData);
+            }
         }
 
-        return dailyDataList;
+        return new DailyDatasAndYoYs(dailyDataList, yearOverYearDataList);
     }
 
 }

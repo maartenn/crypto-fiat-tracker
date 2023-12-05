@@ -47,24 +47,83 @@
             </div>
         </div>
 
+          
 
         <canvas id="myChart"></canvas>
-        <table id="example" class="display table table-striped" style="width:100%">
-            <thead>
-                <tr>
-                    <th>Transaction Id</th>
-                    <th>Timestamp</th>
-                    <th>Amount in sats</th>
-                    <th>Value in eur at time</th>
-                    <th>Value eur now</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+
         <span id="lastKnownPrice"></span>
+        <div class="accordion" id="accordionExtra">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                        Advanced: Year over year data
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <table id="yoydata" class="display table table-striped" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Value end of year</th>
+                                <th>Deposits this year</th>
+                                <th>Profit compared to previous</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                        Advanced: All transactions
+                    </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <table id="transactions" class="display table table-striped" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Transaction Id</th>
+                                <th>Timestamp</th>
+                                <th>Amount in sats</th>
+                                <th>Value in eur at time</th>
+                                <th>Value eur now</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+About me               </button>
+              </h2>
+              <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <p>The company I work for provides the option to receive a part of your salary in Bitcoin. Because I couldn't find a website that was giving me info about the value and performance of this DCA'ing I decided to start a website  that would provide this</p>
+                    <p>It's a simple webapp that uses the CoinGecko API to get the current value of the Bitcoin and the historical value of the Bitcoin. With this data it calculates the profit you made on your wallet. To get the transactions from and to your address it uses the http://blockstream.info API. </p>
+                    <p>You can easily bookmark your own address, because when you enter it in the input field it will be added to your browser bar</p>
+                    <p>Feel free to share this website or if you have ideas or suggestions feel free to create an issue (or merge request ;)) on <a href="https://github.com/maartenn/crypto-fiat-tracker">https://github.com/maartenn/crypto-fiat-tracker</a></a></p>
+                </div>
+              </div>
+            </div>
+        </div>
     </div>
 </div>
+<footer class="footer">
+    <div class="container">
+        <span class="text-muted">Please note: Outcomes may vary based on local exchange pricing, and there is always a possibility of bugs in the code.</span>
+        <a href="https://github.com/maartenn/crypto-fiat-tracker">github repository</a>
+      </div>
+</footer>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
@@ -74,7 +133,7 @@
     $(document).ready(function () {
         $.ajaxSetup({timeout:15000});
         $('#data').hide();
-        $('#example').DataTable();
+
         // setup
         const myChart = new Chart(document.getElementById('myChart'), {
             type: 'line',
@@ -168,22 +227,32 @@
                     $('#data').show();
 
                     // alert( "Data Loaded: " + data );
-                    let dataTable = $('#example').DataTable();
-                    dataTable.clear();
+                    let dataTableYoY = $('#yoydata').DataTable();
+                    dataTableYoY.clear();
+                    dataTableYoY.rows.add(data.yearOverYearData.map(item => [
+                        item.year,
+                        '€ ' + item.totalAmountEurValueNow,
+                        '€ '+ item.depositsThisYear,
+                        item.profitComparedToPreviousYear + '%',
+                    ]));
+                    dataTableYoY.order([0, 'desc']);
+                    dataTableYoY.draw();
+                    let dataTableTransactions = $('#transactions').DataTable();
+                    dataTableTransactions.clear();
                     // Voeg alle nieuwe rijen in één keer toe
-                    dataTable.rows.add(data.mappedTransactions.map(item => [
+                    dataTableTransactions.rows.add(data.mappedTransactions.map(item => [
                         item.txId,
                         item.timestamp,
                         item.txAmountSats,
-                        item.txAmountEur,
-                        item.txAmountEurNow,
+                        '€ ' + item.txAmountEur,
+                        '€ ' + item.txAmountEurNow,
                     ]));
-                    dataTable.order([1, 'desc']); // Sorteer op kolom 1 (timestamp) in aflopende volgorde])]
+                    dataTableTransactions.order([1, 'desc']); // Sorteer op kolom 1 (timestamp) in aflopende volgorde])]
 
                     // Teken de tabel opnieuw
-                    dataTable.draw();
+                    dataTableTransactions.draw();
 
-                    const labels = data.dailyData.map(item => new Date(item.day));
+                    const labels = data.dailyData.map(item => new Date(item.day*1000));
                     const dataDepositing = data.dailyData.map(item => item.totalAmountEurAtMomentOfDepositing);
                     const dataValueNow = data.dailyData.map(item => item.totalAmountEurValueNow);
 

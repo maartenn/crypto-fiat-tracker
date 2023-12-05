@@ -1,3 +1,4 @@
+in no particular order
 1. add more beautiful ui
 2. decide whether to use thymleaf or just use normal rest controller?
 3. add logging
@@ -5,8 +6,13 @@
 5. clean dto response objects to only return whats needed
 X 6. add error handling javascript
 7. add more resiliency java
-8. add about page
-9. add disclaimer
-10. add readme
+X 8. add about page
+X 9. add disclaimer
+X 10. add readme
 11. address validation
 12. api key store in render.
+13. use one cdn instead of multiple and/or use fallbacks
+14. seperate files for javascript/css
+x 15. add github link
+x 16. add yoydata
+

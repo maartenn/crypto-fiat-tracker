@@ -125,29 +125,34 @@ public class AddressController {
             // only execute IF 31 december XOR last entry, because if it's 31 dec there might be 2 entries, so we only hop into the if it's 31 december AND NOT last entry.
             if (localDate.getMonth() == Month.DECEMBER &&
                     localDate.getDayOfMonth() == 31 | entry.equals(relevantPrices.lastEntry())) {
-                        BigDecimal percentProfitComparedToPreviousYear;
-                        BigDecimal depositsThisYear;
-                        if(yearOverYearDataList.size() > 0) {
-                            depositsThisYear = totalEurDeposited.subtract(yearOverYearDataList.getLast().getTotalAmountEurAtMomentOfDepositing());
-                            YearOverYearData yearOverYearDataPreviousYear = yearOverYearDataList.getLast();
-                            if (totalEurValueNow.compareTo(depositsThisYear) > 0) {
-                                // profit
-                                BigDecimal profitComparedToPreviousYear = totalEurValueNow.subtract(yearOverYearDataPreviousYear.getTotalAmountEurValueNow()).subtract(depositsThisYear);
+                BigDecimal percentProfitComparedToStartOfYear;
+                BigDecimal depositsThisYear;
+                BigDecimal startPosition;
+                if(yearOverYearDataList.size() > 0) {
+                    depositsThisYear = totalEurDeposited.subtract(yearOverYearDataList.getLast().getTotalAmountEurAtMomentOfDepositing());
+                    YearOverYearData yearOverYearDataPreviousYear = yearOverYearDataList.getLast();
 
-                                percentProfitComparedToPreviousYear = profitComparedToPreviousYear.divide(yearOverYearDataPreviousYear.getTotalAmountEurValueNow(), 2, RoundingMode.HALF_UP)
-                                    .multiply(new BigDecimal(100)).setScale(0, RoundingMode.HALF_UP);
-                            } else {
-                                // loss
-                                BigDecimal startPlusDeposit = yearOverYearDataPreviousYear.getTotalAmountEurValueNow().add(depositsThisYear);
-                                BigDecimal netLoss = startPlusDeposit.subtract(totalEurValueNow);
-                                percentProfitComparedToPreviousYear = netLoss.divide(startPlusDeposit, 2, RoundingMode.HALF_UP)
-                                    .multiply(new BigDecimal(100)).setScale(0, RoundingMode.HALF_UP).negate();
-                            }
-                        } else {
-                            percentProfitComparedToPreviousYear = BigDecimal.ZERO;
-                            depositsThisYear = totalEurDeposited;
-                        }
-                YearOverYearData yearOverYearData = new YearOverYearData(localDate.getYear(), totalSats, totalEurValueNow, totalEurDeposited, percentProfitComparedToPreviousYear, depositsThisYear);
+                    startPosition = yearOverYearDataPreviousYear.getTotalAmountEurValueNow();
+                } else {
+                    depositsThisYear = totalEurDeposited;
+                    startPosition = BigDecimal.ZERO;
+                }
+                if (totalEurValueNow.compareTo(depositsThisYear) > 0) {
+                    // profit
+                    BigDecimal totalInvestment = startPosition.add(depositsThisYear);
+                    BigDecimal netProfit = totalEurValueNow.subtract(totalInvestment);
+
+                    percentProfitComparedToStartOfYear = netProfit.divide(totalInvestment, 2, RoundingMode.HALF_UP)
+                        .multiply(new BigDecimal(100)).setScale(0, RoundingMode.HALF_UP);
+                } else {
+                    // loss
+                    BigDecimal startPlusDeposit = startPosition.add(depositsThisYear);
+                    BigDecimal netLoss = startPlusDeposit.subtract(totalEurValueNow);
+                    percentProfitComparedToStartOfYear = netLoss.divide(startPlusDeposit, 2, RoundingMode.HALF_UP)
+                        .multiply(new BigDecimal(100)).setScale(0, RoundingMode.HALF_UP).negate();
+                }
+
+                YearOverYearData yearOverYearData = new YearOverYearData(localDate.getYear(), totalSats, totalEurValueNow, totalEurDeposited, percentProfitComparedToStartOfYear, depositsThisYear);
                 yearOverYearDataList.add(yearOverYearData);
             }
         }

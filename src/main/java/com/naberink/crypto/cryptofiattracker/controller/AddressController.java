@@ -130,10 +130,19 @@ public class AddressController {
                         if(yearOverYearDataList.size() > 0) {
                             depositsThisYear = totalEurDeposited.subtract(yearOverYearDataList.getLast().getTotalAmountEurAtMomentOfDepositing());
                             YearOverYearData yearOverYearDataPreviousYear = yearOverYearDataList.getLast();
-                            BigDecimal profitComparedToPreviousYear = totalEurValueNow.subtract(yearOverYearDataPreviousYear.getTotalAmountEurValueNow()).subtract(depositsThisYear);
+                            if (totalEurValueNow.compareTo(depositsThisYear) > 0) {
+                                // profit
+                                BigDecimal profitComparedToPreviousYear = totalEurValueNow.subtract(yearOverYearDataPreviousYear.getTotalAmountEurValueNow()).subtract(depositsThisYear);
 
-                            percentProfitComparedToPreviousYear = profitComparedToPreviousYear.divide(yearOverYearDataPreviousYear.getTotalAmountEurValueNow(), 2, RoundingMode.HALF_UP)
-                                .multiply(new BigDecimal(100)).setScale(0, RoundingMode.HALF_UP);
+                                percentProfitComparedToPreviousYear = profitComparedToPreviousYear.divide(yearOverYearDataPreviousYear.getTotalAmountEurValueNow(), 2, RoundingMode.HALF_UP)
+                                    .multiply(new BigDecimal(100)).setScale(0, RoundingMode.HALF_UP);
+                            } else {
+                                // loss
+                                BigDecimal startPlusDeposit = yearOverYearDataPreviousYear.getTotalAmountEurValueNow().add(depositsThisYear);
+                                BigDecimal netLoss = startPlusDeposit.subtract(totalEurValueNow);
+                                percentProfitComparedToPreviousYear = netLoss.divide(startPlusDeposit, 2, RoundingMode.HALF_UP)
+                                    .multiply(new BigDecimal(100)).setScale(0, RoundingMode.HALF_UP).negate();
+                            }
                         } else {
                             percentProfitComparedToPreviousYear = BigDecimal.ZERO;
                             depositsThisYear = totalEurDeposited;

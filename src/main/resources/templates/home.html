@@ -11,10 +11,12 @@
 <div class="container">
     <h1>Enter Address to calculate your DCA profit</h1>
     <form id="addressForm">
-        <div class="input-group mb-3">
-            <input id="addressInput" type="text" class="form-control" placeholder="Bitcoin Address" aria-label="Bitcoin Address" aria-describedby="basic-addon2" th:value="${address}" required pattern=".*\S+.*" title="This field is required">
+
+        <div class="input-group mb-3 addressInputGroup" th:each="address : ${addresses}">
+            <input th:value="*{address}" type="text" class="form-control" placeholder="Bitcoin Address" aria-label="Bitcoin Address" aria-describedby="basic-addon2" required pattern=".*\S+.*" title="This field is required">
             <div class="input-group-append">
-                <button id="addressBtn" class="btn btn-outline-secondary" type="submit">Show graph</button>
+                <button class="btn btn-outline-secondary addAddressField" type="button">+</button>
+                <button class="btn btn-outline-secondary" type="submit">Show graph</button>
             </div>
         </div>
     </form>
@@ -47,7 +49,6 @@
             </div>
         </div>
 
-          
 
         <canvas id="myChart"></canvas>
 
@@ -55,7 +56,7 @@
         <div class="accordion" id="accordionExtra">
             <div class="accordion-item">
                 <h2 class="accordion-header">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                         Advanced: Year over year data
                     </button>
                 </h2>
@@ -78,7 +79,7 @@
             </div>
             <div class="accordion-item">
                 <h2 class="accordion-header">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
                         Advanced: All transactions
                     </button>
                 </h2>
@@ -101,18 +102,22 @@
                 </div>
             </div>
             <div class="accordion-item">
-              <h2 class="accordion-header">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-About me               </button>
-              </h2>
-              <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <p>The company I work for provides the option to receive a part of your salary in Bitcoin. Because I couldn't find a website that was giving me info about the value and performance of this DCA'ing I decided to start a website  that would provide this</p>
-                    <p>It's a simple webapp that uses the CoinGecko API to get the current value of the Bitcoin and the historical value of the Bitcoin. With this data it calculates the profit you made on your wallet. To get the transactions from and to your address it uses the http://blockstream.info API. </p>
-                    <p>You can easily bookmark your own address, because when you enter it in the input field it will be added to your browser bar</p>
-                    <p>Feel free to share this website or if you have ideas or suggestions feel free to create an issue (or merge request ;)) on <a href="https://github.com/maartenn/crypto-fiat-tracker">https://github.com/maartenn/crypto-fiat-tracker</a></a></p>
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        About me
+                    </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <p>The company I work for provides the option to receive a part of your salary in Bitcoin. Because I couldn't find a website that was giving me info about the value and performance of this DCA'ing I decided to start
+                            a website that would provide this</p>
+                        <p>It's a simple webapp that uses the CoinGecko API to get the current value of the Bitcoin and the historical value of the Bitcoin. With this data it calculates the profit you made on your wallet. To get the
+                            transactions from and to your address it uses the http://blockstream.info API. </p>
+                        <p>You can easily bookmark your own address, because when you enter it in the input field it will be added to your browser bar</p>
+                        <p>Feel free to share this website or if you have ideas or suggestions feel free to create an issue (or merge request ;)) on <a href="https://github.com/maartenn/crypto-fiat-tracker">https://github.com/maartenn/crypto-fiat-tracker</a></a>
+                        </p>
+                    </div>
                 </div>
-              </div>
             </div>
         </div>
     </div>
@@ -121,7 +126,7 @@ About me               </button>
     <div class="container">
         <span class="text-muted">Please note: Outcomes may vary based on local exchange pricing, and there is always a possibility of bugs in the code.</span>
         <a href="https://github.com/maartenn/crypto-fiat-tracker">github repository</a>
-      </div>
+    </div>
 </footer>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
@@ -131,7 +136,7 @@ About me               </button>
 
 <script>
     $(document).ready(function () {
-        $.ajaxSetup({timeout:15000});
+        $.ajaxSetup({timeout: 15000});
         $('#data').hide();
 
         // setup
@@ -201,12 +206,14 @@ About me               </button>
         });
 
         // if address is filled then load data
-        if ($('#addressInput').val() !== '') {
-            let value = $('#addressInput').val();
-            getDataForAddress(value);
+        let addresses = getAddresses();
+
+        if (addresses.length != 0) {
+            getDataForAddresses(addresses);
         }
 
-        function getDataForAddress(value) {
+
+        function getDataForAddresses(value) {
 
             $("#addressBtn").prop("disabled", true);
             // $("#addressBtn").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
@@ -232,7 +239,7 @@ About me               </button>
                     dataTableYoY.rows.add(data.yearOverYearData.map(item => [
                         item.year,
                         '€ ' + item.totalAmountEurValueNow,
-                        '€ '+ item.depositsThisYear,
+                        '€ ' + item.depositsThisYear,
                         item.profitComparedToPreviousYear + '%',
                     ]));
                     dataTableYoY.order([0, 'desc']);
@@ -242,7 +249,7 @@ About me               </button>
                     // Voeg alle nieuwe rijen in één keer toe
                     dataTableTransactions.rows.add(data.mappedTransactions.map(item => [
                         item.txId,
-                        item.timestamp,
+                        new Date(item.timestamp*1000),
                         item.txAmountSats,
                         '€ ' + item.txAmountEur,
                         '€ ' + item.txAmountEurNow,
@@ -252,7 +259,7 @@ About me               </button>
                     // Teken de tabel opnieuw
                     dataTableTransactions.draw();
 
-                    const labels = data.dailyData.map(item => new Date(item.day*1000));
+                    const labels = data.dailyData.map(item => new Date(item.day * 1000));
                     const dataDepositing = data.dailyData.map(item => item.totalAmountEurAtMomentOfDepositing);
                     const dataValueNow = data.dailyData.map(item => item.totalAmountEurValueNow);
 
@@ -303,23 +310,56 @@ About me               </button>
                             $('#profit').text(Math.ceil(this.Counter) + "%");
                         }
                     });
-                    $("#lastKnownPrice").text("Last known price: € " + data.lastKnownPrice + " from: " + new Date(data.dateOfLastKnownPrice*1000));
+                    $("#lastKnownPrice").text("Last known price: € " + data.lastKnownPrice + " from: " + new Date(data.dateOfLastKnownPrice * 1000));
                     // enable button again
                     $("#addressBtn").html('Show graph');
                 });
         }
 
+
+        function addAddressInput() {
+            console.log('addAddressInput');
+            const newInputGroup = $('.addressInputGroup').last().clone();
+            newInputGroup.find('.input-group-append').empty();
+            newInputGroup.find('input').val('');
+            newInputGroup.find('.input-group-append').append('<button class="btn btn-outline-danger remove-address" type="button" >-</button>');
+            $('.addressInputGroup').last().after(newInputGroup);
+        }
+
+
+        $(document).on('click','.addAddressField:first', function () {
+            addAddressInput();
+        });
+
+        $(document).on('click','.remove-address' ,function () {
+            $(this).closest('.input-group').remove();
+        });
+
+        function getAddresses() {
+            let addresses = [];
+            $('#addressForm input[type="text"]').each(function () {
+                let address = $(this).val().trim();
+                if (address) {
+                    addresses.push(address);
+                }
+            });
+            return addresses;
+        }
+
         $("#addressForm").on('submit', function (event) {
-            // disable button , grey out and show spinner to indicate loading
-            event.preventDefault(); // Prevent the form from submitting in the traditional way
+            event.preventDefault();
+            let addresses = getAddresses();
 
+            if (addresses.length === 0) {
+                alert('Please enter at least one address.');
+                return;
+            }
 
-            // Perform AJAX request
-            let value = $('#addressInput').val().trim();
-            getDataForAddress(value);
-            history.replaceState( {} , '', '/' + value );
+            getDataForAddresses(addresses);
+            history.replaceState({}, '', '/' + addresses.join(','));
         });
     });
+
 </script>
 </body>
 </html>

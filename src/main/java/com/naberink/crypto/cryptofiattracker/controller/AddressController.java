@@ -8,10 +8,15 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.time.ZoneId;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 
 import com.naberink.crypto.cryptofiattracker.dto.DailyDatasAndYoYs;
@@ -39,22 +44,24 @@ public class AddressController {
     private final PricesService pricesService;
     private final BlockStreamApi blockStreamApi;
 
-    @GetMapping("/transactions/{address}")
-    public Response transactions(@PathVariable("address") String address) {
-        log.info("Fetching data for address: {}", address);
+    @GetMapping("/transactions/{addresses}")
+    public Response transactions(@PathVariable("addresses") String addresses) {
+        log.info("Fetching data for address: {}", addresses);
+
+        Set<String> splittedAddresses = Set.of(addresses.split(","));
         // Removed explicit System.out.println statements, consider using a logger
         // instead
 
         var priceMap = pricesService.getPriceMap();
         // Logging size of pricemap, consider using logger.debug if necessary
 
-        var transactions = getTransactions(address);
+        // use treeset so we have old to new AND avoid duplicates
+        List<Transaction> transactions = getTransactions(splittedAddresses);
 
         if (transactions.isEmpty()) {
             return null; // Consider returning a response indicating no transactions
         }
-
-        var mappedTransactions = TransactionMapper.mapTransactions(transactions, address, priceMap);
+        var mappedTransactions = TransactionMapper.mapTransactions(transactions, splittedAddresses, priceMap);
         var dailyDatasAndYoYs = calculateDailyDataListAndYoY(mappedTransactions, priceMap);
 
         MappedTransaction last = mappedTransactions.getLast();
@@ -68,13 +75,18 @@ public class AddressController {
                 last.getTotalAmountEurValueNow(), last.getTotalSatsBalance(), percentProfit, priceMap.lastEntry().getValue().setScale(2, RoundingMode.HALF_UP), Instant.ofEpochMilli(priceMap.lastEntry().getKey()));
     }
 
-    private List<Transaction> getTransactions(String address) {
-        try {
-            return blockStreamApi.getTransactionsForAddress(address);
-        } catch (IOException | InterruptedException e) {
-            Thread.currentThread().interrupt(); // Proper handling of InterruptedException
-            throw new RuntimeException("Error fetching transactions for address: " + address, e);
-        }
+    private List<Transaction> getTransactions(Set<String> addresses) {
+        // make a flatmap that returns all transactionss combined
+
+        return addresses.stream().map(address -> {
+            try {
+                return blockStreamApi.getTransactionsForAddress(address);
+            } catch (IOException | InterruptedException e) {
+                Thread.currentThread().interrupt(); // Proper handling of InterruptedException
+                throw new RuntimeException("Error fetching transactions for address: " + address, e);
+            }
+        }).flatMap(list -> list.stream())
+            .distinct().sorted(Comparator.comparingLong(tx ->tx.getStatus().getBlockTime())).toList();
     }
 
     private DailyDatasAndYoYs calculateDailyDataListAndYoY(List<MappedTransaction> mappedTransactions,
@@ -82,6 +94,7 @@ public class AddressController {
         List<DailyData> dailyDataList = new ArrayList<>();
 
         List<YearOverYearData> yearOverYearDataList = new ArrayList<>();
+
         if (mappedTransactions.isEmpty()) {
             return new DailyDatasAndYoYs(dailyDataList, null); // Return an empty list if there are no transactions
         }

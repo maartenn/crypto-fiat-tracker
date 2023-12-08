@@ -4,8 +4,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import com.naberink.crypto.cryptofiattracker.Util;
@@ -17,22 +18,19 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class TransactionMapper {
-    public static List<MappedTransaction> mapTransactions(List<Transaction> transactions, String address,
-            ConcurrentSkipListMap<Long, BigDecimal> priceMap) {
+    public static List<MappedTransaction> mapTransactions(List<Transaction> transactions, Set<String> addresses,
+                                                          ConcurrentSkipListMap<Long, BigDecimal> priceMap) {
         BigDecimal latestPrice = priceMap.lastEntry().getValue();
         List<MappedTransaction> mappedTransactions = new ArrayList<>();
         long satsBalance = 0;
         BigDecimal eurValueInvested = BigDecimal.ZERO;
-
-        // Reverse the transactions list for processing
-        Collections.reverse(transactions);
 
         for (Transaction transaction : transactions) {
             if (!transaction.getStatus().isConfirmed()) {
                 continue;
             }
 
-            long amountSats = calculateNetSats(transaction, address);
+            long amountSats = calculateNetSats(transaction, addresses);
             satsBalance += amountSats;
 
             long blockTimeEpochSeconds = transaction.getStatus().getBlockTime();
@@ -53,16 +51,16 @@ public class TransactionMapper {
         return mappedTransactions;
     }
 
-    private static long calculateNetSats(Transaction transaction, String address) {
+    private static long calculateNetSats(Transaction transaction, Set<String> address) {
         long amountSats = 0;
         for (Vout vout : transaction.getVout()) {
-            if (address.equals(vout.getScriptpubkeyAddress())) {
+            if (address.contains(vout.getScriptpubkeyAddress())) {
                 amountSats += vout.getValue();
             }
         }
         for (Vin vin : transaction.getVin()) {
             Vout prevout = vin.getPrevout();
-            if (prevout != null && address.equals(prevout.getScriptpubkeyAddress())) {
+            if (prevout != null && address.contains(prevout.getScriptpubkeyAddress())) {
                 amountSats -= prevout.getValue();
             }
         }

@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -82,16 +83,22 @@ public class BlockStreamApi {
 
             String jsonResponse = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body).join();
+try {
+    List<Transaction> transactions = transactionMapper.readValue(jsonResponse,
+        new TypeReference<List<Transaction>>() {
+        });
+    if (!transactions.isEmpty()) {
+        allTransactions.addAll(transactions);
+        lastSeenTxid = transactions.get(transactions.size() - 1).getTxid();
+    } else {
+        break;
+    }
+} catch (Exception e) {
+    // Log the exception and the jsonResponse (if available) for debugging
+    e.printStackTrace();
+    return Collections.emptyList();
+}
 
-            List<Transaction> transactions = transactionMapper.readValue(jsonResponse,
-                    new TypeReference<List<Transaction>>() {
-                    });
-            if (!transactions.isEmpty()) {
-                allTransactions.addAll(transactions);
-                lastSeenTxid = transactions.get(transactions.size() - 1).getTxid();
-            } else {
-                break;
-            }
 
         } while (true);
 

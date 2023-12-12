@@ -12,11 +12,12 @@
     <h1>Enter Address to calculate your DCA profit</h1>
     <form id="addressForm">
 
-        <div class="input-group mb-3 addressInputGroup" th:each="address : ${addresses}">
+        <div class="input-group mb-3 addressInputGroup" th:each="address, iterStat : ${addresses}">
             <input th:value="*{address}" type="text" class="form-control" placeholder="Bitcoin Address" aria-label="Bitcoin Address" aria-describedby="basic-addon2" required pattern=".*\S+.*" title="This field is required">
             <div class="input-group-append">
-                <button class="btn btn-outline-secondary addAddressField" type="button">+</button>
-                <button class="btn btn-outline-secondary" type="submit">Show graph</button>
+                <button class="btn btn-outline-secondary addAddressField" type="button" th:if="${iterStat.index == 0}">+</button>
+                <button class="btn btn-outline-secondary" type="submit" th:if="${iterStat.index == 0}">Show graph</button>
+                <button class="btn btn-outline-danger remove-address" type="button" th:if="${iterStat.index != 0}">-</button>
             </div>
         </div>
     </form>
